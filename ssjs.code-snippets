@@ -15,175 +15,6 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-
-	"SSJS WSProxy Retrieve Data Extensions List": {
-		"prefix": "ssjs-wsproxy-retrieve-de-list",
-		"body": [
-			"        function retrieveDataExtensions(DEKey) {",
-			"            var cols = ['Name', 'CustomerKey', 'CategoryID', 'IsSendable'];",
-			"            var filter = {",
-			"                Property: 'CustomerKey',",
-			"                SimpleOperator: 'equals',",
-			"                Value: DEKey",
-			"            };",
-			"            var result = prox.retrieve('DataExtension', cols, filter);",
-			"            return result;",
-			"        }"
-		],
-		"description": "Retrieve Data Extensions List"
-	},
-
-	"SSJS WSProxy Retrieve Data Extensions Records": {
-		"prefix": "ssjs-wsproxy-retrieve-de-records",
-		"body": [
-			"function retrieveRecords(DEKey) {",
-			"    var DERetrieveConfig = {",
-			"        name: DEKey,",
-			"        cols: ['SubscriberKey']",
-			"    };",
-			"",
-			"    var records = [],",
-			"        moreData = true,",
-			"        reqID = (data = null);",
-			"",
-			"    while (moreData) {",
-			"        moreData = false;",
-			"",
-			"        if (reqID == null) {",
-			"            data = prox.retrieve(",
-			"                'DataExtensionObject[' + DERetrieveConfig.name + ']',",
-			"                DERetrieveConfig.cols",
-			"            );",
-			"        } else {",
-			"            data = prox.getNextBatch('DataExtensionObject[' + DERetrieveConfig.name + ']', reqID);",
-			"        }",
-			"",
-			"        if (data != null) {",
-			"            moreData = data.HasMoreRows;",
-			"            reqID = data.RequestID;",
-			"            for (var i = 0; i < data.Results.length; i++) {",
-			"                var result_list = data.Results[i].Properties;",
-			"                var obj = {};",
-			"                for (k in result_list) {",
-			"                    var key = result_list[k].Name;",
-			"                    var val = result_list[k].Value;",
-			"                    if (key.indexOf('_') != 0) obj[key] = val;",
-			"                }",
-			"                records.push(obj);",
-			"            }",
-			"        }",
-			"    }",
-			"    return records;",
-			"}",
-			"",
-			"function retrieveDataExtensions(DEKey) {",
-			"    var cols = ['Name', 'CustomerKey', 'CategoryID', 'IsSendable'];",
-			"    var filter = {",
-			"        Property: 'CustomerKey',",
-			"        SimpleOperator: 'equals',",
-			"        Value: DEKey",
-			"    };",
-			"    var result = prox.retrieve('DataExtension', cols, filter);",
-			"    return result;",
-			"}",
-			""
-		],
-		"description": "WSProxy Retrieve Data Extensions Records"
-	},
-
-	"SSJS Matching records": {
-		"prefix": "ssjs-matching-records",
-		"body": [
-			"function rowsMatched(DE1JSON, DE2JSON, key1, key2) {",
-			"    for (var i = 0; i < DE1JSON.length; i++) {",
-			"        DE1JSON[i]['FoundRecord'] = 'false';",
-			"        for (var j = 0; j < DE2JSON.length; j++) {",
-			"            if (DE1JSON[i][key1] === DE2JSON[j][key2]) {",
-			"                DE1JSON[i]['FoundRecord'] = 'true';",
-			"            }",
-			"            break;",
-			"        }",
-			"    }",
-			"    return DE1JSON;",
-			"}",
-			""
-		],
-		"description": "SSJS Matching records"
-	},
-	"SSJS WSProxy Upsert Data Extension Records": {
-		"prefix": "ssjs-wsproxy-upsert-de-records",
-		"body": [
-			"function upsertDE(DEKey, DEAction, DEJSON) {",
-			"    var resultArr = [];",
-			"    var resultObj = {};",
-			"    var updateObject = {",
-			"        CustomerKey: DEKey,",
-			"        Properties: [",
-			"            {",
-			"                Name: 'SubscriberKey',",
-			"                Value: DEJSON['SubscriberKey']",
-			"            }",
-			"        ]",
-			"    };",
-			"",
-			"    var options = {",
-			"        SaveOptions: [",
-			"            {",
-			"                PropertyName: '*',",
-			"                SaveAction: DEAction //NOTE: UpdateAdd, UpdateOnly",
-			"            }",
-			"        ]",
-			"    };",
-			"",
-			"    if (DEAction === 'UpdateOnly') {",
-			"        var result = prox.updateItem('DataExtensionObject', updateObject, options);",
-			"    } else if (DEAction === 'AddOnly') {",
-			"        var result = prox.createItem('DataExtensionObject', updateObject);",
-			"    }",
-			"",
-			"    resultObj['Subscriber Key'] = DEJSON['SubscriberKey'];",
-			"    if (result.Status === 'Error') {",
-			"        resultObj['Record Result'] = result;",
-			"    } else {",
-			"        resultObj['Record Result'] = result.Status;",
-			"    }",
-			"",
-			"    resultArr.push(resultObj);",
-			"    return resultArr;",
-			"}",
-			""
-		],
-		"description": "SSJS WSProxy Upsert Data Extension Records"
-	},
-	"SSJS Platform Add Remove From Suppression List": {
-		"prefix": "ssjs-platform-suppression-list",
-		"body": [
-			"function addRemoveFromSuppressionList(DEKey, DEJSON, mode) {",
-			"    var resultObj = {};",
-			"    if (mode === 'delete') {",
-			"        var result = Platform.Function.DeleteData(",
-			"            DEKey,",
-			"            ['Email Address'],",
-			"            [DEJSON['PersonEmail']]",
-			"        );",
-			"        resultObj['Email Address'] = DEJSON['PersonEmail'];",
-			"        resultObj['Remove Subscriber Result'] = result;",
-			"    } else if (mode === 'insert') {",
-			"        var result = Platform.Function.InsertData(",
-			"            DEKey,",
-			"            ['Email Address', 'SubscriberKey', 'PausedUntil'],",
-			"            [DEJSON['PersonEmail'], DEJSON['PersonContactId'], DEJSON['PausedUntil']]",
-			"        );",
-			"        resultObj['Subscriber Key'] = DEJSON['PersonContactId'];",
-			"        resultObj['Email Address'] = DEJSON['PersonEmail'];",
-			"        resultObj['Insert Subscriber Result'] = result;",
-			"    }",
-			"    return resultObj;",
-			"}",
-			""
-		],
-		"description": "SSJS Platform Add Remove From Suppression List"
-	},
 	"SSJS Write CloudPage Results": {
 		"prefix": "ssjs-write-cloudpage-results",
 		"body": [
@@ -202,7 +33,11 @@
 	},
 	"SSJS For Loop": {
 		"prefix": "ssjs-for-loop",
-		"body": ["for (var i = 0; i < $arr.length; i++){", "    ", "}"],
+		"body": [
+			"for (var i = 0; i < $arr.length; i++){",
+			"    ",
+			"}"
+		],
 		"description": "SSJS For Loop"
 	},
 	"SSJS Template": {
@@ -296,72 +131,6 @@
 		],
 		"description": "SSJS Accessing property of a JSON and creating a new Object using the property"
 	},
-	"SSJS LogUnsubEvent and Delay": {
-		"prefix": "ssjs-logunsubevent",
-		"body": [
-			"function unsubscribeFunctions() {}",
-			"unsubscribeFunctions = {",
-			"    //NOTE: LogUnsubEvent() using WSProxy.  This logs the unsubscribe event at the job level for tracking purposes",
-			"    logunsubEvent: function (subscriberKey) {",
-			"        var props = [",
-			"            {",
-			"                Name: 'SubscriberKey',",
-			"                Value: subscriberKey",
-			"            },",
-			"            {",
-			"                Name: 'JobID',",
-			"                Value: Variable.GetValue('@jobID')",
-			"            },",
-			"            {",
-			"                Name: 'ListID',",
-			"                Value: Variable.GetValue('@listid')",
-			"            },",
-			"            {",
-			"                Name: 'BatchID',",
-			"                Value: Variable.GetValue('@batchID')",
-			"            },",
-			"            {",
-			"                Name: 'Reason',",
-			"                Value: 'One click unsubscribe'",
-			"            }",
-			"        ];",
-			"",
-			"        var results = prox.execute(props, 'LogUnsubEvent');",
-			"        return results;",
-			"    },",
-			"    delay: function (milliseconds) {",
-			"        //NOTE: 3000 = 3 seconds",
-			"        var start = new Date().getTime();",
-			"        for (var i = 0; i < 1e7; i++) {",
-			"            if (new Date().getTime() - start > milliseconds) {",
-			"                break;",
-			"            }",
-			"        }",
-			"    }",
-			"};",
-			""
-		],
-		"description": "SSJS LogUnsubEvent and Delay"
-	},
-	"SSJS Update Tracking Consent on Subscriber Object": {
-		"prefix": "ssjs-tracking-consent",
-		"body": [
-			"function email_updateTrackingConsent(subscriberKey, TrackOpensClicks_OptinFlag) {",
-			"    //NOTE: Updates Tracking Preference on Subscriber Object.",
-			"    var updateSubscriber = {",
-			"        SubscriberKey: subscriberKey,",
-			"        Attributes: {",
-			"            DoNotTrack: !TrackOpensClicks_OptinFlag //NOTE: Inverted because optin on form means FALSE in Subscriber Attribute",
-			"        }",
-			"    };",
-			"    var subObj = Subscriber.Init(subscriberKey);",
-			"    var status = subObj.Upsert(updateSubscriber);",
-			"    return status;",
-			"}",
-			""
-		],
-		"description": "SSJS Update Tracking Consent on Subscriber Object"
-	},
 	"SSJS For Key In": {
 		"prefix": "ssjs-for-key-in",
 		"body": [
@@ -383,16 +152,33 @@
 		"description": "SSJS For Key In"
 	},
 	"SSJS Debug": {
-		"prefix": "ssjs-debug",
+		"prefix": "ssjs-0-debug",
 		"body": [
 			"Variable.SetValue(\"debugvar1\", Stringify(var));",
 			"",
 			"<script runat=\"client\">",
 			"console.log(`SSJS Var1: %%=v(@debugvar1)=%%`);",
+			"console.log(`SSJS Var2: %%=v(@debugvar2)=%%`);",
+			"console.log(`SSJS Var3: %%=v(@debugvar3)=%%`);",
+			"console.log(`SSJS Var4: %%=v(@debugvar4)=%%`);",
+			"console.log(`SSJS Var5: %%=v(@debugvar5)=%%`);",
 			"</script>",
 			""
 		],
 		"description": "SSJS Debug"
+	},
+	"SSJS Execute AMPscript": {
+		"prefix": "ssjs-execute-ampscript",
+		"body": [
+			"var MID = '';",
+			"MID += '%%[ ';",
+			"MID += 'SET @MID= AuthenticatedMemberID()';",
+			"MID += ']%%';",
+			"MID += '%%=v(@MID)=%%';",
+			"globalVars.MID = Platform.Function.TreatAsContent(MID);",
+			""
+		],
+		"description": "SSJS Execute AMPscript"
 	},
 	"FSJS Channel Toggle": {
 		"prefix": "fsjs-channel-toggle",
@@ -486,6 +272,70 @@
 		],
 		"description": "FSJS Phone Number Validator"
 	},
+	"FSJS Get Property Values from Fields/Text": {
+		"prefix": "fsjs-get-property-values-from-fields",
+		"body": [
+			"function getPropertyValues() {",
+			"                const propertyValuePairs = [];",
+			"                $('.formItem').each(function (index) {",
+			"                    var property = $(this).data('property');",
+			"                    var value = $(this).data('value');",
+			"",
+			"                    //NOTE: Text Areas",
+			"                    var textArea = $(this).find('textarea');",
+			"                    if (textArea) {",
+			"                        var valueElement = $(this).find('textarea');",
+			"                        value = textArea.val();",
+			"                    }",
+			"                    //NOTE: Checkboxes",
+			"                    var checkbox = $(this).find('input[type=\"checkbox\"]');",
+			"                    if (checkbox) {",
+			"                        var checkedCheckbox = $(this).find('input[type=\"checkbox\"]:checked');",
+			"                        if (checkedCheckbox.length > 0) {",
+			"                            checkedCheckbox.each(function () {",
+			"                                var checkboxValue = $(this).val();",
+			"                                propertyValuePairs.push({",
+			"                                    property: property,",
+			"                                    value: checkboxValue",
+			"                                });",
+			"                            });",
+			"                        }",
+			"                    }",
+			"                    //NOTE: Using the existing value by default if not anything of the above",
+			"                    if (!value && checkbox.length === 0 && textArea.length === 0) {",
+			"                        valueElement = $(this).find('div').eq(1); //NOTE: Selecting the 2nd nested div",
+			"                        value = valueElement.text().trim();",
+			"                    }",
+			"                    //NOTE: Only push if value is not empty",
+			"                    if (value) {",
+			"                        propertyValuePairs.push({ property: property, value: value });",
+			"                    }",
+			"                });",
+			"                //NOTE: Converting to standard format for AJAX",
+			"                const propertyValuePairsConvertedObj = {};",
+			"                for (var i = 0; i < propertyValuePairs.length; i++) {",
+			"                    var property = propertyValuePairs[i].property;",
+			"                    var value = propertyValuePairs[i].value;",
+			"                    //NOTE: If the property already exists in the result object, append the value with a '|' separator",
+			"                    if (propertyValuePairsConvertedObj.hasOwnProperty(property)) {",
+			"                        propertyValuePairsConvertedObj[property] += '|' + value;",
+			"                    } else {",
+			"                        //NOTE: Otherwise, initialize the property with the value",
+			"                        propertyValuePairsConvertedObj[property] = value;",
+			"                    }",
+			"                }",
+			"                //NOTE:  Add | separator if more than one value is found for a property",
+			"                for (var prop in propertyValuePairsConvertedObj) {",
+			"                    if (propertyValuePairsConvertedObj[prop].includes('|')) {",
+			"                        propertyValuePairsConvertedObj[prop] =",
+			"                            '|' + propertyValuePairsConvertedObj[prop];",
+			"                    }",
+			"                }",
+			"                return propertyValuePairsConvertedObj;",
+			"            }"
+		],
+		"description": "FSJS Get Property Values from Fields/Text"
+	},
 	"SSJS Phone Number Data Hygiene": {
 		"prefix": "ssjs-phone-number-data-hygieve",
 		"body": [
@@ -499,6 +349,16 @@
 			""
 		],
 		"description": "SSJS Phone Number Data Hygiene"
+	},
+	"SSJS Function": {
+		"prefix": "ssjs-function",
+		"body": [
+			"function x(s1,s2,s2) {",
+			"    var results = resulta",
+			"    return results;",
+			"}"
+		],
+		"description": "SSJS Function"
 	},
 	"SSJS Update SFObject": {
 		"prefix": "ssjs-update-sfobject",
@@ -547,8 +407,64 @@
 	},
 	"SSJS Set AMPScript Variable": {
 		"prefix": "ssjs-set-variable",
-		"body": ["Variable.SetValue('var1', var1);"],
+		"body": [
+			"Variable.SetValue('var1', var1);"
+		],
 		"description": "SSJS Set AMPScript Variable"
+	},
+	"SSJS Get AMPScript Variable": {
+		"prefix": "ssjs-get-variable",
+		"body": [
+			"Variable.GetValue('var1');;"
+		],
+		"description": "SSJS Get AMPScript Variable"
+	},
+	"SSJS Try Catch": {
+		"prefix": "ssjs-try-catch",
+		"body": [
+			"try {",
+			"} catch (e) {",
+			"Variable.SetValue(\"errorMessage\", Stringify(e.message) + Stringify(e.description));",
+			"}",
+			"<script runat=\"client\">",
+			"console.log(`Try Catch Error: %%=v(@errorMessage)=%%`);",
+			"</script>"
+		],
+		"description": "SSJS Try Catch"
+	},
+	"AMPscript Variable Output": {
+		"prefix": "amp-var",
+		"body": [
+			"%%=v(@)=%%",
+		],
+		"description": "AMPscript Variable Output"
+	}
+	"AMPscript block": {
+		"prefix": "amp-block",
+		"body": [
+			"<script runat=\"server\" language=\"ampscript\">",
+			"",
+			"</script>"
+		],
+		"description": "AMPscript block"
+	}
+	"Ampscript Try Catch": {
+		"prefix": "amp-try-catch",
+		"body": [
+			"<script runat=\"server\">",
+			"Platform.Load(\"Core\",\"1.1.1\");",
+			"try{",
+			"</script>",
+			"",
+			"%%[ your AMPscript block goes here  ]%%",
+			"",
+			"<script runat=\"server\">",
+			"}catch(e){",
+			"Variable.SetValue(\"errorMessage\", Stringify(e.message) + Stringify(e.description));",
+			"}",
+			"</script>"
+		],
+		"description": "Ampscript Try Catch"
 	},
 	"AMPscript Credit Card Hidden Card Number": {
 		"prefix": "amp-credit-card-hiding",
@@ -585,5 +501,615 @@
 			"]%%"
 		],
 		"description": "AMPscript Credit Card Hidden Card Number"
+	},
+	"AMPscript Update DE": {
+		"prefix": "amp-update-de",
+		"body": [
+			"%%[",
+			"    SET @UpdatedRowCount = UpdateData(",
+			"        'DENAME',",
+			"        1,",
+			"        'LOOKUPCOLUMN',",
+			"        'LOOKUPVALUE',",
+			"        'UPDATECOLUMN',",
+			"        'UPDATEVALUE'",
+			"",
+			"    )",
+			"    OUTPUTLINE(CONCAT(\"Rows updated: \", @UpdatedRowCount))",
+			"]%%",
+			""
+		],
+		"description": "AMPscript Update DE"
+	},
+	"AMPScript Subscriber Key debug": {
+		"prefix": "amp-sk-debug",
+		"body": [
+			"SET @skdebug = true",
+			"IF (@skdebug == true) THEN",
+			"  SET @subscriberKey = _subscriberkey",
+			"  IF (AttributeValue('subscriberKey') == '') THEN",
+			"    SET @subscriberKey = 'XXXXX'",
+			"  ENDIF",
+			"  SET @emailAddress = emailaddr",
+			"  IF (AttributeValue('emailAddress') == '') THEN",
+			"    SET @emailAddress = 'XXXX@XXX.com'",
+			"  ENDIF",
+			"ELSE",
+			"  SET @subscriberKey = _subscriberkey",
+			"  SET @emailAddress = emailaddr",
+			"ENDIF"
+		],
+		"description": "Allows for hardcoded Subscriber Key if not coming from email for testing purposes"
+	},
+	"Git Reset Last Commit": {
+		"prefix": "git-reset-commit",
+		"body": [
+			"git reset --soft HEAD~1"
+		],
+		"description": "Git Reset Last Commit"
+	},
+	"AMPscript CloudPage Debug": {
+		"prefix": "amp-cloudpage-debug",
+		"body": [
+			"%%=TreatAsContent(HttpGet(\"http://christophercarswell.atwebpages.com/mobile_unsubscribe.html\"))=%%"
+		],
+		"description": "AMPscript CloudPage Debug"
+	}
+}{
+	// Place your global snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+	"SSJS Write CloudPage Results": {
+		"prefix": "ssjs-write-cloudpage-results",
+		"body": [
+			"function writeResults(name, result) {",
+			"    if (cloudPageDebug === true) {",
+			"        Write('<br />');",
+			"        Write('<br />');",
+			"        Write('<h3>');",
+			"        Write(name);",
+			"        Write('</h3>');",
+			"        Write(Stringify(result));",
+			"    }",
+			"}"
+		],
+		"description": "SSJS Write CloudPage Results"
+	},
+	"SSJS For Loop": {
+		"prefix": "ssjs-for-loop",
+		"body": [
+			"for (var i = 0; i < $arr.length; i++){",
+			"    ",
+			"}"
+		],
+		"description": "SSJS For Loop"
+	},
+	"SSJS Template": {
+		"prefix": "ssjs-template",
+		"body": [
+			"<script runat=\"server\">",
+			"    Platform.Load('core', '1.1.1');",
+			"    try {",
+			"        var prox = new Script.Util.WSProxy();",
+			"",
+			"    } catch (e) {",
+			"        writeResults('Error', e);",
+			"    }",
+			"</script>",
+			""
+		],
+		"description": "SSJS Template"
+	},
+	"SSJS Class Template": {
+		"prefix": "ssjs-class-template",
+		"body": [
+			"function className() {}",
+			"className = {",
+			"    functionName: function (arr) {",
+			"        var resultJSON = [];",
+			"        for (var i = 0; i < arr.length; i++) {",
+			"            var resultObj = {};",
+			"            if (arr[i] === 'Orange') {",
+			"                resultObj['Status'] = 'Success';",
+			"                resultJSON.push(resultObj);",
+			"            }",
+			"        }",
+			"        return resultJSON;",
+			"    }",
+			"};",
+			"var arr = ['Orange', 'Yellow', 'Green'];",
+			"var results = className.functionName(arr);",
+			""
+		],
+		"description": "SSJS Class Template"
+	},
+	"SSJS Accessing property of a JSON and creating a new Object using the property": {
+		"prefix": "ssjs-json-property-access",
+		"body": [
+			"//NOTE: Accessing property of a JSON and creating a new Object using the property",
+			"",
+			"var parameters = [",
+			"    {",
+			"        A: true",
+			"    },",
+			"    {",
+			"        B: false",
+			"    },",
+			"    {",
+			"        C_changed: false",
+			"    },",
+			"    {",
+			"        D_changed: true",
+			"    }",
+			"];",
+			"",
+			"var resultsArr = [];",
+			"for (var i = 0; i < parameters.length; i++) {",
+			"    for (var name in parameters[i]) {",
+			"        changedValueObj = {};",
+			"        if (name.indexOf('_changed') !== -1) {",
+			"            var field = name.replace('_changed', '');",
+			"            changedValueObj = {",
+			"                Name: field,",
+			"                Value: parameters[i][name]",
+			"            };",
+			"            resultsArr.push(changedValueObj);",
+			"        }",
+			"    }",
+			"}",
+			"console.log(resultsArr);",
+			"",
+			"//RESULTS:",
+			"",
+			"[",
+			"    {",
+			"        Name: 'C',",
+			"        Value: false",
+			"    },",
+			"    {",
+			"        Name: 'D',",
+			"        Value: true",
+			"    }",
+			"];",
+			""
+		],
+		"description": "SSJS Accessing property of a JSON and creating a new Object using the property"
+	},
+	"SSJS For Key In": {
+		"prefix": "ssjs-for-key-in",
+		"body": [
+			"//NOTE: Checks tracking consent on subscriber Object",
+			"var subObj = Subscriber.Init(subscriberKey);",
+			"var attributes = subObj.Attributes.Retrieve(); //[{\"Name\":\"Data Source\",\"Value\":\"UNKNOWN\"},{\"Name\":\"DoNotTrack\",\"Value\":\"True\"}]",
+			"",
+			"for (var x in attributes) {",
+			"    if (attributes[x].Name === 'DoNotTrack') {",
+			"        if (attributes[x].Value === 'False') {",
+			"            var trackingConsentOnLoad = 'true';",
+			"        } else {",
+			"            var trackingConsentOnLoad = 'false';",
+			"        }",
+			"    }",
+			"}",
+			""
+		],
+		"description": "SSJS For Key In"
+	},
+	"SSJS Debug": {
+		"prefix": "ssjs-0-debug",
+		"body": [
+			"Variable.SetValue(\"debugvar1\", Stringify(var));",
+			"",
+			"<script runat=\"client\">",
+			"console.log(`SSJS Var1: %%=v(@debugvar1)=%%`);",
+			"console.log(`SSJS Var2: %%=v(@debugvar2)=%%`);",
+			"console.log(`SSJS Var3: %%=v(@debugvar3)=%%`);",
+			"console.log(`SSJS Var4: %%=v(@debugvar4)=%%`);",
+			"console.log(`SSJS Var5: %%=v(@debugvar5)=%%`);",
+			"</script>",
+			""
+		],
+		"description": "SSJS Debug"
+	},
+	"SSJS Execute AMPscript": {
+		"prefix": "ssjs-execute-ampscript",
+		"body": [
+			"var MID = '';",
+			"MID += '%%[ ';",
+			"MID += 'SET @MID= AuthenticatedMemberID()';",
+			"MID += ']%%';",
+			"MID += '%%=v(@MID)=%%';",
+			"globalVars.MID = Platform.Function.TreatAsContent(MID);",
+			""
+		],
+		"description": "SSJS Execute AMPscript"
+	},
+	"FSJS Channel Toggle": {
+		"prefix": "fsjs-channel-toggle",
+		"body": [
+			"//NOTE: Checks all the inputs with the class .subscription and toggled the channel checkbox if all subscriptions are ticked or not",
+			"function emailchannelCheck(preferenceNumber) {",
+			"    var j = 0",
+			"    $('.subscription').each(function(i, obj) {",
+			"        if ($(this).attr('checked') === \"checked\") {",
+			"            j++",
+			"        }",
+			"    })",
+			"    if (j > 0) {",
+			"        $('#emailchannel').prop('checked', true)",
+			"    } else {",
+			"        $('#emailchannel').prop('checked', false)",
+			"    }",
+			"};",
+			"",
+			"emailchannelCheck($('.subscription').length)"
+		],
+		"description": "FSJS Channel Toggle"
+	},
+	"FSJS Subscriptions Toggle From Channel": {
+		"prefix": "fsjs-subscriptions-toggle-from-channel",
+		"body": [
+			"//NOTE: Toggles all subscription checkboxes if the email channel checkbox is toggled. Also toggles preference_updated class",
+			"$('#emailchannel').click(function () {",
+			"    if ($('#emailchannel').prop('checked') === true) {",
+			"        $('.subscription').each(function (i, obj) {",
+			"            if ($(this).prop('checked') === false) {",
+			"                $(this).prop('checked', true);",
+			"                $(this).toggleClass('preference_updated');",
+			"            }",
+			"        });",
+			"    } else if ($('#emailchannel').prop('checked') === false) {",
+			"        $('.subscription').each(function (i, obj) {",
+			"            if ($(this).prop('checked') === true) {",
+			"                $(this).prop('checked', false);",
+			"                $(this).toggleClass('preference_updated');",
+			"            }",
+			"        });",
+			"    }",
+			"});",
+			""
+		],
+		"description": "FSJS Subscriptions Toggle From Channel"
+	},
+	"FSJS Channel Toggle Check": {
+		"prefix": "fsjs-channel-toggle-check",
+		"body": [
+			"//NOTE: Toggles channel if the expected amount of subscriptions are toggled",
+			"$('.subscription').click(",
+			"    function() {",
+			"        var checked = document.querySelectorAll('input.subscription:checked');",
+			"        /* beautify preserve:start */",
+			"              var fs_subscriptionsAmount = <ctrl:var name = subscriptionsAmount />",
+			"              if (checked.length > 0) {",
+			"                  $('#emailchannel').prop('checked',true)",
+			"              }else {",
+			"                  $('#emailchannel').prop('checked', false)",
+			"              }",
+			"              /* beautify preserve:end */",
+			"    });",
+			""
+		],
+		"description": "FSJS Channel Toggle Check"
+	},
+	"FSJS Phone Number Validator": {
+		"prefix": "fsjs-phone-number-validator",
+		"body": [
+			"$(function () {",
+			"    //NOTE: Creating the REGEX form validator for checking on submission",
+			"    $.validator.addMethod(",
+			"        'regex',",
+			"        function (value, element, regexpr) {",
+			"            return regexpr.test(value);",
+			"        },",
+			"        'Please enter a valid phone number.'",
+			"    );",
+			"    $('#form').validate({",
+			"        rules: {",
+			"            mobile_number: {",
+			"                required: true,",
+			"                regex: /^\\s*(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})[-. )]*(\\d{3})[-. ]*(\\d{4})(?: *x(\\d+))?\\s*$/",
+			"            }",
+			"        }",
+			"    });",
+			"});",
+			""
+		],
+		"description": "FSJS Phone Number Validator"
+	},
+	"FSJS Get Property Values from Fields/Text": {
+		"prefix": "fsjs-get-property-values-from-fields",
+		"body": [
+			"function getPropertyValues() {",
+			"                const propertyValuePairs = [];",
+			"                $('.formItem').each(function (index) {",
+			"                    var property = $(this).data('property');",
+			"                    var value = $(this).data('value');",
+			"",
+			"                    //NOTE: Text Areas",
+			"                    var textArea = $(this).find('textarea');",
+			"                    if (textArea) {",
+			"                        var valueElement = $(this).find('textarea');",
+			"                        value = textArea.val();",
+			"                    }",
+			"                    //NOTE: Checkboxes",
+			"                    var checkbox = $(this).find('input[type=\"checkbox\"]');",
+			"                    if (checkbox) {",
+			"                        var checkedCheckbox = $(this).find('input[type=\"checkbox\"]:checked');",
+			"                        if (checkedCheckbox.length > 0) {",
+			"                            checkedCheckbox.each(function () {",
+			"                                var checkboxValue = $(this).val();",
+			"                                propertyValuePairs.push({",
+			"                                    property: property,",
+			"                                    value: checkboxValue",
+			"                                });",
+			"                            });",
+			"                        }",
+			"                    }",
+			"                    //NOTE: Using the existing value by default if not anything of the above",
+			"                    if (!value && checkbox.length === 0 && textArea.length === 0) {",
+			"                        valueElement = $(this).find('div').eq(1); //NOTE: Selecting the 2nd nested div",
+			"                        value = valueElement.text().trim();",
+			"                    }",
+			"                    //NOTE: Only push if value is not empty",
+			"                    if (value) {",
+			"                        propertyValuePairs.push({ property: property, value: value });",
+			"                    }",
+			"                });",
+			"                //NOTE: Converting to standard format for AJAX",
+			"                const propertyValuePairsConvertedObj = {};",
+			"                for (var i = 0; i < propertyValuePairs.length; i++) {",
+			"                    var property = propertyValuePairs[i].property;",
+			"                    var value = propertyValuePairs[i].value;",
+			"                    //NOTE: If the property already exists in the result object, append the value with a '|' separator",
+			"                    if (propertyValuePairsConvertedObj.hasOwnProperty(property)) {",
+			"                        propertyValuePairsConvertedObj[property] += '|' + value;",
+			"                    } else {",
+			"                        //NOTE: Otherwise, initialize the property with the value",
+			"                        propertyValuePairsConvertedObj[property] = value;",
+			"                    }",
+			"                }",
+			"                //NOTE:  Add | separator if more than one value is found for a property",
+			"                for (var prop in propertyValuePairsConvertedObj) {",
+			"                    if (propertyValuePairsConvertedObj[prop].includes('|')) {",
+			"                        propertyValuePairsConvertedObj[prop] =",
+			"                            '|' + propertyValuePairsConvertedObj[prop];",
+			"                    }",
+			"                }",
+			"                return propertyValuePairsConvertedObj;",
+			"            }"
+		],
+		"description": "FSJS Get Property Values from Fields/Text"
+	},
+	"SSJS Phone Number Data Hygiene": {
+		"prefix": "ssjs-phone-number-data-hygieve",
+		"body": [
+			"//NOTE: Data input hygiene for entry into MobileConnect ready DE. Input is expected either +234 or 0 in form",
+			"parameters.mobile_number = parameters.mobile_number.replace(/^\\+/, ''); //NOTE: Remove leading +",
+			"if (globalVars.countryCode === 'NG') {",
+			"    parameters.mobile_number = parameters.mobile_number.replace(/^234+/, '0'); //NOTE: Replace leading 234 with 0",
+			"    parameters.mobile_number = parameters.mobile_number.replace(/^0+/, ''); //NOTE: Remove leading 0",
+			"    parameters.mobile_number = '234' + parameters.mobile_number; //NOTE: Field must be in this format: 234705555555 (no +, countrycode, no leading 0)",
+			"}",
+			""
+		],
+		"description": "SSJS Phone Number Data Hygiene"
+	},
+	"SSJS Function": {
+		"prefix": "ssjs-function",
+		"body": [
+			"function x(s1,s2,s2) {",
+			"    var results = resulta",
+			"    return results;",
+			"}"
+		],
+		"description": "SSJS Function"
+	},
+	"SSJS Update SFObject": {
+		"prefix": "ssjs-update-sfobject",
+		"body": [
+			"function updateSFObj(recordType, subscriberKey, parameters) {",
+			"    var SFIDPattern = new RegExp('^[a-zA-Z0-9]{18}');",
+			"",
+			"    if (SFIDPattern.test(subscriberKey) == true) {",
+			"        var fields = [];",
+			"        if (recordType === 'Candidate') {",
+			"            if (parameters.candidate_advice_and_tips_subscription_changed === true) {",
+			"                fields.push('EmailPreferences_AdviceTips__c');",
+			"                fields.push(parameters.candidate_advice_and_tips);",
+			"            }",
+			"        }",
+			"",
+			"        //NOTE: ALWAYS UPDATE TO FALSE IN CRM",
+			"        fields.push('HasOptedOutOfEmail');",
+			"        fields.push('false');",
+			"",
+			"        //NOTE: Contact or Lead",
+			"        var sfObj = subscriberKey.substring(0, 3) == '003' ? 'Contact' : 'Lead';",
+			"",
+			"        var updateSFObject = '';",
+			"        updateSFObject += '\\%\\%[ ';",
+			"        updateSFObject +=",
+			"            \"set @SFUpdateResults = UpdateSingleSalesforceObject('\" + sfObj + \"',\";",
+			"        updateSFObject += \"'\" + subscriberKey + \"','\" + fields.join(\"','\") + \"'\";",
+			"        updateSFObject += ') ';",
+			"        updateSFObject += 'output(concat(@SFUpdateResults)) ';",
+			"        updateSFObject += ']\\%\\%';",
+			"",
+			"        try {",
+			"            updateSFObjectResults = Platform.Function.TreatAsContent(updateSFObject);",
+			"        } catch (err) {",
+			"            updateSFObjectResults = 0;",
+			"            return err;",
+			"        }",
+			"",
+			"        return parseInt(updateSFObjectResults);",
+			"    }",
+			"}",
+			""
+		],
+		"description": "SSJS Update SFObject"
+	},
+	"SSJS Set AMPScript Variable": {
+		"prefix": "ssjs-set-variable",
+		"body": [
+			"Variable.SetValue('var1', var1);"
+		],
+		"description": "SSJS Set AMPScript Variable"
+	},
+	"SSJS Get AMPScript Variable": {
+		"prefix": "ssjs-get-variable",
+		"body": [
+			"Variable.GetValue('var1');;"
+		],
+		"description": "SSJS Get AMPScript Variable"
+	},
+	"SSJS Try Catch": {
+		"prefix": "ssjs-try-catch",
+		"body": [
+			"try {",
+			"} catch (e) {",
+			"Variable.SetValue(\"errorMessage\", Stringify(e.message) + Stringify(e.description));",
+			"}",
+			"<script runat=\"client\">",
+			"console.log(`Try Catch Error: %%=v(@errorMessage)=%%`);",
+			"</script>"
+		],
+		"description": "SSJS Try Catch"
+	},
+	"AMPscript Variable Output": {
+		"prefix": "amp-var",
+		"body": [
+			"%%=v(@)=%%",
+		],
+		"description": "AMPscript Variable Output"
+	}
+	"AMPscript block": {
+		"prefix": "amp-block",
+		"body": [
+			"<script runat=\"server\" language=\"ampscript\">",
+			"",
+			"</script>"
+		],
+		"description": "AMPscript block"
+	}
+	"Ampscript Try Catch": {
+		"prefix": "amp-try-catch",
+		"body": [
+			"<script runat=\"server\">",
+			"Platform.Load(\"Core\",\"1.1.1\");",
+			"try{",
+			"</script>",
+			"",
+			"%%[ your AMPscript block goes here  ]%%",
+			"",
+			"<script runat=\"server\">",
+			"}catch(e){",
+			"Variable.SetValue(\"errorMessage\", Stringify(e.message) + Stringify(e.description));",
+			"}",
+			"</script>"
+		],
+		"description": "Ampscript Try Catch"
+	},
+	"AMPscript Credit Card Hidden Card Number": {
+		"prefix": "amp-credit-card-hiding",
+		"body": [
+			"%%[",
+			"/* Final Card Number Format: 3*******3350 */",
+			"SET @cardNumber = 335678903350",
+			"SET @hiddencardNumberStart = substring(@cardNumber, 1, 1)",
+			"SET @hiddencardNumberMid = substring(@cardNumber, 2, subtract(Length(@cardNumber), 5))",
+			"SET @hiddencardNumberMidLength = Length(@hiddencardNumberMid)",
+			"IF (@hiddencardNumberMidLength == 1) THEN",
+			"    SET @hiddencardNumberMid = \"*\"",
+			"ELSEIF (@hiddencardNumberMidLength == 2) THEN",
+			"    SET @hiddencardNumberMid = \"**\"",
+			"ELSEIF (@hiddencardNumberMidLength == 3) THEN",
+			"    SET @hiddencardNumberMid = \"***\"",
+			"ELSEIF (@hiddencardNumberMidLength == 4) THEN",
+			"    SET @hiddencardNumberMid = \"****\"",
+			"ELSEIF (@hiddencardNumberMidLength == 5) THEN",
+			"    SET @hiddencardNumberMid = \"*****\"",
+			"ELSEIF (@hiddencardNumberMidLength == 6) THEN",
+			"    SET @hiddencardNumberMid = \"******\"",
+			"ELSEIF (@hiddencardNumberMidLength == 7) THEN",
+			"    SET @hiddencardNumberMid = \"*******\"",
+			"ELSEIF (@hiddencardNumberMidLength == 8) THEN",
+			"    SET @hiddencardNumberMid = \"********\"",
+			"ELSEIF (@hiddencardNumberMidLength == 9) THEN",
+			"    SET @hiddencardNumberMid = \"*********\"",
+			"ELSEIF (@hiddencardNumberMidLength == 10) THEN",
+			"    SET @hiddencardNumberMid = \"*********\"",
+			"ENDIF",
+			"SET @hiddencardNumberEnd = Substring(@cardNumber, subtract(Length(@cardNumber), 3), 4)",
+			"SET @hiddencardNumber = CONCAT(@hiddencardNumberStart, @hiddencardNumberMid, @hiddencardNumberEnd)",
+			"]%%"
+		],
+		"description": "AMPscript Credit Card Hidden Card Number"
+	},
+	"AMPscript Update DE": {
+		"prefix": "amp-update-de",
+		"body": [
+			"%%[",
+			"    SET @UpdatedRowCount = UpdateData(",
+			"        'DENAME',",
+			"        1,",
+			"        'LOOKUPCOLUMN',",
+			"        'LOOKUPVALUE',",
+			"        'UPDATECOLUMN',",
+			"        'UPDATEVALUE'",
+			"",
+			"    )",
+			"    OUTPUTLINE(CONCAT(\"Rows updated: \", @UpdatedRowCount))",
+			"]%%",
+			""
+		],
+		"description": "AMPscript Update DE"
+	},
+	"AMPScript Subscriber Key debug": {
+		"prefix": "amp-sk-debug",
+		"body": [
+			"SET @skdebug = true",
+			"IF (@skdebug == true) THEN",
+			"  SET @subscriberKey = _subscriberkey",
+			"  IF (AttributeValue('subscriberKey') == '') THEN",
+			"    SET @subscriberKey = 'XXXXX'",
+			"  ENDIF",
+			"  SET @emailAddress = emailaddr",
+			"  IF (AttributeValue('emailAddress') == '') THEN",
+			"    SET @emailAddress = 'XXXX@XXX.com'",
+			"  ENDIF",
+			"ELSE",
+			"  SET @subscriberKey = _subscriberkey",
+			"  SET @emailAddress = emailaddr",
+			"ENDIF"
+		],
+		"description": "Allows for hardcoded Subscriber Key if not coming from email for testing purposes"
+	},
+	"Git Reset Last Commit": {
+		"prefix": "git-reset-commit",
+		"body": [
+			"git reset --soft HEAD~1"
+		],
+		"description": "Git Reset Last Commit"
+	},
+	"AMPscript CloudPage Debug": {
+		"prefix": "amp-cloudpage-debug",
+		"body": [
+			"%%=TreatAsContent(HttpGet(\"http://christophercarswell.atwebpages.com/mobile_unsubscribe.html\"))=%%"
+		],
+		"description": "AMPscript CloudPage Debug"
 	}
 }
